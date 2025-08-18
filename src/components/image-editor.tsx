@@ -6,28 +6,26 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Sun,
   Contrast,
   Palette,
-  Layers,
   Camera,
   WandSparkles,
-  Download,
   Upload,
   RotateCcw,
-  Image as ImageIcon,
   Loader2,
   SlidersHorizontal,
   FlipHorizontal,
   Droplets,
+  Undo2,
+  Image as ImageIcon
 } from 'lucide-react';
 import type { GenerateEditDescriptionInput } from '@/ai/flows/generate-edit-description';
+import { cn } from '@/lib/utils';
 
 type Filter = {
   id: keyof typeof defaultFilterValues;
@@ -46,12 +44,14 @@ const defaultFilterValues = {
   'hue-rotate': 0,
   blur: 0,
   invert: 0,
+  opacity: 100,
 };
 
 const AVAILABLE_FILTERS: Filter[] = [
   { id: 'brightness', name: 'Brightness', unit: '%', min: 0, max: 200 },
   { id: 'contrast', name: 'Contrast', unit: '%', min: 0, max: 200 },
   { id: 'saturate', name: 'Saturation', unit: '%', min: 0, max: 200 },
+  { id: 'opacity', name: 'Opacity', unit: '%', min: 0, max: 100 },
   { id: 'grayscale', name: 'Grayscale', unit: '%', min: 0, max: 100 },
   { id: 'sepia', name: 'Sepia', unit: '%', min: 0, max: 100 },
   { id: 'hue-rotate', name: 'Hue Rotate', unit: 'deg', min: 0, max: 360 },
@@ -59,13 +59,22 @@ const AVAILABLE_FILTERS: Filter[] = [
   { id: 'invert', name: 'Invert', unit: '%', min: 0, max: 100 },
 ];
 
+const PRESET_FILTERS = [
+    { name: 'Vintage', values: { brightness: 110, contrast: 110, saturate: 120, sepia: 40 } },
+    { name: 'Black & White', values: { grayscale: 100, contrast: 120 } },
+    { name: 'Dreamy', values: { brightness: 105, saturate: 130, blur: 2, contrast: 90 } },
+    { name: 'Cool Blue', values: { 'hue-rotate': 180, saturate: 110, brightness: 95 } },
+    { name: 'Faded', values: { opacity: 80, contrast: 90, saturate: 80 } },
+    { name: 'Sharp', values: { contrast: 150, brightness: 105 } }
+]
+
 export function ImageEditor() {
   const { toast } = useToast();
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [appliedFilters, setAppliedFilters] = useState<Record<string, number>>(defaultFilterValues);
-  const [editDescription, setEditDescription] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [history, setHistory] = useState<Record<string, number>[]>([]);
   const [originalImageSize, setOriginalImageSize] = useState({ width: 0, height: 0 });
+  const [isImageLoading, setIsImageLoading] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
@@ -101,14 +110,16 @@ export function ImageEditor() {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      setIsImageLoading(true);
       const reader = new FileReader();
       reader.onload = (e) => {
         const newImage = new window.Image();
         newImage.onload = () => {
           imageRef.current = newImage;
-          setOriginalImageSize({width: newImage.width, height: newImage.height});
+          setOriginalImageSize({width: newImage.naturalWidth, height: newImage.naturalHeight});
           setImageSrc(e.target?.result as string);
           resetFilters();
+          setIsImageLoading(false);
         };
         newImage.src = e.target?.result as string;
       };
@@ -117,121 +128,96 @@ export function ImageEditor() {
   };
 
   const handleFilterChange = (filterId: string, value: number) => {
+    setHistory(prev => [...prev, appliedFilters]);
     setAppliedFilters(prev => ({ ...prev, [filterId]: value }));
   };
+  
+  const applyPreset = (presetValues: Partial<Record<string, number>>) => {
+    setHistory(prev => [...prev, appliedFilters]);
+    setAppliedFilters({ ...defaultFilterValues, ...presetValues });
+  }
 
   const resetFilters = () => {
+    setHistory(prev => [...prev, appliedFilters]);
     setAppliedFilters(defaultFilterValues);
-    setEditDescription('');
-  };
-
-  const handleGenerateDescription = async () => {
-    setIsGenerating(true);
-    setEditDescription('');
-    try {
-      const filtersToDescribe: GenerateEditDescriptionInput = {
-        filtersApplied: Object.entries(appliedFilters)
-          .map(([id, value]) => {
-            const filterInfo = AVAILABLE_FILTERS.find(f => f.id === id);
-            if (!filterInfo || value === defaultFilterValues[id as keyof typeof defaultFilterValues]) return null;
-            return `${filterInfo.name} applied at ${value}${filterInfo.unit}`;
-          })
-          .filter((item): item is string => item !== null),
-      };
-
-      if (filtersToDescribe.filtersApplied.length === 0) {
-        setEditDescription('No filters have been applied to the image.');
-        return;
-      }
-      
-      const result = await generateEditDescription(filtersToDescribe);
-      setEditDescription(result.description);
-    } catch (error) {
-      console.error('Error generating description:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to generate edit description. Please try again.',
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleDownload = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || !imageSrc) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'No image to download.',
-      });
-      return;
-    }
-    const link = document.createElement('a');
-    link.download = 'filterforge-edit.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
   };
   
-    useEffect(() => {
-    const loadSampleImage = async () => {
-      try {
+  const handleUndo = () => {
+    if (history.length === 0) return;
+    const lastState = history[history.length - 1];
+    setAppliedFilters(lastState);
+    setHistory(prev => prev.slice(0, prev.length - 1));
+  }
+
+  const loadSampleImage = useCallback(async () => {
+    setIsImageLoading(true);
+    try {
         const response = await fetch('https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?q=80&w=1480&auto=format&fit=crop');
+        if (!response.ok) throw new Error("Image fetch failed");
         const blob = await response.blob();
         const reader = new FileReader();
         reader.onload = (e) => {
           const newImage = new window.Image();
           newImage.onload = () => {
             imageRef.current = newImage;
-            const aspectRatio = newImage.width / newImage.height;
-            const container = document.querySelector('.image-container');
-            if(container) {
-                const containerWidth = container.clientWidth;
-                const containerHeight = container.clientHeight;
-                let width, height;
-                if (containerWidth / containerHeight > aspectRatio) {
-                    height = containerHeight;
-                    width = height * aspectRatio;
-                } else {
-                    width = containerWidth;
-                    height = width / aspectRatio;
-                }
-                setOriginalImageSize({width: newImage.naturalWidth, height: newImage.naturalHeight});
-                setImageSrc(e.target?.result as string);
-                resetFilters();
-            }
+            setOriginalImageSize({width: newImage.naturalWidth, height: newImage.naturalHeight});
+            setImageSrc(e.target?.result as string);
+            resetFilters();
           };
           newImage.src = e.target?.result as string;
         };
         reader.readAsDataURL(blob);
-      } catch (error) {
-        console.error("Failed to load sample image", error);
-        toast({
-            title: "Error",
-            description: "Could not load sample cat image.",
-            variant: "destructive"
-        })
-      }
-    };
-    loadSampleImage();
+    } catch (error) {
+      console.error("Failed to load sample image", error);
+      toast({
+          title: "Error",
+          description: "Could not load sample cat image.",
+          variant: "destructive"
+      })
+    } finally {
+        setIsImageLoading(false);
+    }
   }, [toast]);
-
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] h-screen bg-black">
-        <div className="flex items-center justify-center p-4 md:p-8 image-container">
-            {imageSrc ? (
-            <div className="relative rounded-lg overflow-hidden shadow-2xl bg-white">
-                <canvas ref={canvasRef} className="max-w-full max-h-[80vh] object-contain" />
-            </div>
-            ) : (
-            <div className="text-center text-muted-foreground p-8">
+      <div className="flex items-center justify-center p-4 md:p-8 bg-black">
+        {imageSrc ? (
+          <div className="relative rounded-lg overflow-hidden shadow-2xl bg-white">
+            <canvas ref={canvasRef} className="max-w-full max-h-[80vh] object-contain" />
+          </div>
+        ) : (
+          <Card className="w-full max-w-md h-[450px] flex flex-col items-center justify-center text-center p-8 border-2 border-dashed">
+            {isImageLoading ? (
+              <>
                 <Loader2 className="mx-auto h-16 w-16 animate-spin" />
                 <h3 className="mt-4 text-xl font-medium">Loading Image...</h3>
-            </div>
+              </>
+            ) : (
+              <>
+                <ImageIcon className="h-24 w-24 text-muted-foreground" />
+                <h3 className="mt-4 text-2xl font-semibold">Upload an Image</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Click the button below to upload an image from your device.
+                </p>
+                <input
+                  type="file"
+                  ref={uploadInputRef}
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  accept="image/*"
+                />
+                <Button className="mt-6" onClick={() => uploadInputRef.current?.click()}>
+                  <Upload className="mr-2" />
+                  Upload Image
+                </Button>
+                <p className="text-xs text-muted-foreground my-4">OR</p>
+                <Button variant="outline" onClick={loadSampleImage}>Try a Demo Image</Button>
+              </>
             )}
-        </div>
+          </Card>
+        )}
+      </div>
 
       <Card className="lg:col-start-2 flex flex-col bg-card border-l rounded-none">
         <CardContent className="flex-grow overflow-hidden flex flex-col p-0">
@@ -244,9 +230,21 @@ export function ImageEditor() {
             </div>
             
             <TabsContent value="presets" className="flex-grow p-4 pt-0">
-                <div className="text-center text-muted-foreground h-full flex items-center justify-center">
-                    <p>Preset filters coming soon!</p>
-                </div>
+                <ScrollArea className="h-full pr-4 -mr-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        {PRESET_FILTERS.map((preset) => (
+                            <Button 
+                                key={preset.name}
+                                variant="outline"
+                                className="h-20 text-lg"
+                                onClick={() => applyPreset(preset.values)}
+                                disabled={!imageSrc}
+                            >
+                                {preset.name}
+                            </Button>
+                        ))}
+                    </div>
+                </ScrollArea>
             </TabsContent>
 
             <TabsContent value="custom" className="flex-grow overflow-hidden flex flex-col p-4 pt-0 mt-0">
@@ -262,20 +260,24 @@ export function ImageEditor() {
                                 <span className="text-xs font-mono text-muted-foreground">{appliedFilters[filter.id]}{filter.unit}</span>
                             </div>
                             <Slider
-                            id={filter.id}
-                            min={filter.min}
-                            max={filter.max}
-                            value={[appliedFilters[filter.id]]}
-                            onValueChange={([val]) => handleFilterChange(filter.id, val)}
+                              id={filter.id}
+                              min={filter.min}
+                              max={filter.max}
+                              value={[appliedFilters[filter.id]]}
+                              onValueChange={([val]) => handleFilterChange(filter.id, val)}
+                              disabled={!imageSrc}
                             />
                         </div>
                         ))}
                     </div>
                     </ScrollArea>
                 </div>
-                <div className="pt-4 mt-auto">
-                    <Button variant="outline" className="w-full" onClick={resetFilters}>
-                        <RotateCcw className="mr-2 h-4 w-4" /> Reset Filters
+                <div className="pt-4 mt-auto grid grid-cols-2 gap-4">
+                    <Button variant="outline" className="w-full" onClick={handleUndo} disabled={history.length === 0 || !imageSrc}>
+                        <Undo2 className="mr-2 h-4 w-4" /> Undo
+                    </Button>
+                    <Button variant="outline" className="w-full" onClick={resetFilters} disabled={!imageSrc}>
+                        <RotateCcw className="mr-2 h-4 w-4" /> Reset
                     </Button>
                 </div>
             </TabsContent>
