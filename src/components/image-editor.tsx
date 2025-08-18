@@ -3,20 +3,20 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { generateEditDescription } from '@/ai/flows/generate-edit-description';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Sun,
-  Droplets,
   Contrast,
   Palette,
-  Camera,
   Layers,
+  Camera,
   WandSparkles,
   Download,
   Upload,
@@ -25,14 +25,13 @@ import {
   Loader2,
   SlidersHorizontal,
   FlipHorizontal,
-  Eye,
+  Droplets,
 } from 'lucide-react';
 import type { GenerateEditDescriptionInput } from '@/ai/flows/generate-edit-description';
 
 type Filter = {
   id: keyof typeof defaultFilterValues;
   name: string;
-  icon: React.ElementType;
   unit: string;
   min: number;
   max: number;
@@ -42,24 +41,22 @@ const defaultFilterValues = {
   brightness: 100,
   contrast: 100,
   saturate: 100,
-  blur: 0,
-  sepia: 0,
   grayscale: 0,
-  invert: 0,
+  sepia: 0,
   'hue-rotate': 0,
-  opacity: 100,
+  blur: 0,
+  invert: 0,
 };
 
 const AVAILABLE_FILTERS: Filter[] = [
-  { id: 'brightness', name: 'Brightness', icon: Sun, unit: '%', min: 0, max: 200 },
-  { id: 'contrast', name: 'Contrast', icon: Contrast, unit: '%', min: 0, max: 200 },
-  { id: 'saturate', name: 'Saturation', icon: Palette, unit: '%', min: 0, max: 200 },
-  { id: 'grayscale', name: 'Grayscale', icon: Layers, unit: '%', min: 0, max: 100 },
-  { id: 'sepia', name: 'Sepia', icon: Camera, unit: '%', min: 0, max: 100 },
-  { id: 'hue-rotate', name: 'Hue', icon: WandSparkles, unit: 'deg', min: 0, max: 360 },
-  { id: 'invert', name: 'Invert', icon: FlipHorizontal, unit: '%', min: 0, max: 100 },
-  { id: 'blur', name: 'Blur', icon: Droplets, unit: 'px', min: 0, max: 20 },
-  { id: 'opacity', name: 'Opacity', icon: Eye, unit: '%', min: 0, max: 100 },
+  { id: 'brightness', name: 'Brightness', unit: '%', min: 0, max: 200 },
+  { id: 'contrast', name: 'Contrast', unit: '%', min: 0, max: 200 },
+  { id: 'saturate', name: 'Saturation', unit: '%', min: 0, max: 200 },
+  { id: 'grayscale', name: 'Grayscale', unit: '%', min: 0, max: 100 },
+  { id: 'sepia', name: 'Sepia', unit: '%', min: 0, max: 100 },
+  { id: 'hue-rotate', name: 'Hue Rotate', unit: 'deg', min: 0, max: 360 },
+  { id: 'blur', name: 'Blur', unit: 'px', min: 0, max: 20 },
+  { id: 'invert', name: 'Invert', unit: '%', min: 0, max: 100 },
 ];
 
 export function ImageEditor() {
@@ -176,88 +173,114 @@ export function ImageEditor() {
     link.href = canvas.toDataURL('image/png');
     link.click();
   };
+  
+    useEffect(() => {
+    const loadSampleImage = async () => {
+      try {
+        const response = await fetch('https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?q=80&w=1480&auto=format&fit=crop');
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const newImage = new window.Image();
+          newImage.onload = () => {
+            imageRef.current = newImage;
+            const aspectRatio = newImage.width / newImage.height;
+            const container = document.querySelector('.image-container');
+            if(container) {
+                const containerWidth = container.clientWidth;
+                const containerHeight = container.clientHeight;
+                let width, height;
+                if (containerWidth / containerHeight > aspectRatio) {
+                    height = containerHeight;
+                    width = height * aspectRatio;
+                } else {
+                    width = containerWidth;
+                    height = width / aspectRatio;
+                }
+                setOriginalImageSize({width: newImage.naturalWidth, height: newImage.naturalHeight});
+                setImageSrc(e.target?.result as string);
+                resetFilters();
+            }
+          };
+          newImage.src = e.target?.result as string;
+        };
+        reader.readAsDataURL(blob);
+      } catch (error) {
+        console.error("Failed to load sample image", error);
+        toast({
+            title: "Error",
+            description: "Could not load sample cat image.",
+            variant: "destructive"
+        })
+      }
+    };
+    loadSampleImage();
+  }, [toast]);
+
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-8 p-4 md:p-8 h-full">
-      <div className="lg:col-span-3 bg-card/50 rounded-lg flex items-center justify-center p-4 border border-dashed aspect-video relative overflow-hidden">
-        {imageSrc ? (
-          <canvas ref={canvasRef} className="max-w-full max-h-full object-contain" />
-        ) : (
-          <div className="text-center text-muted-foreground p-8">
-            <ImageIcon className="mx-auto h-16 w-16" />
-            <h3 className="mt-4 text-xl font-medium">Image Editor</h3>
-            <p className="mt-2 text-sm">Upload an image to start applying filters.</p>
-          </div>
-        )}
-      </div>
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] h-screen bg-black">
+        <div className="flex items-center justify-center p-4 md:p-8 image-container">
+            {imageSrc ? (
+            <div className="relative rounded-lg overflow-hidden shadow-2xl bg-white">
+                <canvas ref={canvasRef} className="max-w-full max-h-[80vh] object-contain" />
+            </div>
+            ) : (
+            <div className="text-center text-muted-foreground p-8">
+                <Loader2 className="mx-auto h-16 w-16 animate-spin" />
+                <h3 className="mt-4 text-xl font-medium">Loading Image...</h3>
+            </div>
+            )}
+        </div>
 
-      <Card className="lg:col-span-2 flex flex-col">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <SlidersHorizontal className="mr-2 h-6 w-6 text-primary" />
-            Controls
-          </CardTitle>
-          <CardDescription>Adjust filters and see your image update in real-time.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex-grow overflow-hidden flex flex-col">
-          <div className="mb-4">
-            <input
-              type="file"
-              ref={uploadInputRef}
-              onChange={handleImageUpload}
-              accept="image/*"
-              className="hidden"
-            />
-            <Button className="w-full" variant={imageSrc ? 'outline' : 'default'} onClick={() => uploadInputRef.current?.click()}>
-              <Upload className="mr-2 h-4 w-4" />
-              {imageSrc ? 'Change Image' : 'Upload Image'}
-            </Button>
-          </div>
+      <Card className="lg:col-start-2 flex flex-col bg-card border-l rounded-none">
+        <CardContent className="flex-grow overflow-hidden flex flex-col p-0">
+          <Tabs defaultValue="custom" className="flex flex-col h-full">
+            <div className="p-4">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="presets"><WandSparkles className="mr-2" /> Presets</TabsTrigger>
+                    <TabsTrigger value="custom"><SlidersHorizontal className="mr-2" /> Custom</TabsTrigger>
+                </TabsList>
+            </div>
+            
+            <TabsContent value="presets" className="flex-grow p-4 pt-0">
+                <div className="text-center text-muted-foreground h-full flex items-center justify-center">
+                    <p>Preset filters coming soon!</p>
+                </div>
+            </TabsContent>
 
-          <div className="flex-grow overflow-hidden">
-            <ScrollArea className="h-full pr-4 -mr-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-                {AVAILABLE_FILTERS.map((filter) => (
-                  <div key={filter.id} className="space-y-2">
-                    <Label htmlFor={filter.id} className="flex items-center text-sm">
-                      <filter.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {filter.name}
-                      <span className="ml-auto text-xs text-muted-foreground">{appliedFilters[filter.id]}{filter.unit}</span>
-                    </Label>
-                    <Slider
-                      id={filter.id}
-                      min={filter.min}
-                      max={filter.max}
-                      value={[appliedFilters[filter.id]]}
-                      onValueChange={([val]) => handleFilterChange(filter.id, val)}
-                      disabled={!imageSrc}
-                    />
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
+            <TabsContent value="custom" className="flex-grow overflow-hidden flex flex-col p-4 pt-0 mt-0">
+                <div className="flex-grow overflow-hidden">
+                    <ScrollArea className="h-full pr-4 -mr-4">
+                    <div className="space-y-6">
+                        {AVAILABLE_FILTERS.map((filter) => (
+                        <div key={filter.id} className="space-y-3">
+                            <div className="flex justify-between items-center">
+                                <Label htmlFor={filter.id} className="text-sm font-medium">
+                                    {filter.name}
+                                </Label>
+                                <span className="text-xs font-mono text-muted-foreground">{appliedFilters[filter.id]}{filter.unit}</span>
+                            </div>
+                            <Slider
+                            id={filter.id}
+                            min={filter.min}
+                            max={filter.max}
+                            value={[appliedFilters[filter.id]]}
+                            onValueChange={([val]) => handleFilterChange(filter.id, val)}
+                            />
+                        </div>
+                        ))}
+                    </div>
+                    </ScrollArea>
+                </div>
+                <div className="pt-4 mt-auto">
+                    <Button variant="outline" className="w-full" onClick={resetFilters}>
+                        <RotateCcw className="mr-2 h-4 w-4" /> Reset Filters
+                    </Button>
+                </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
-        <CardFooter className="flex-col !items-stretch space-y-4 pt-6">
-            <div className="space-y-2">
-                <Button className="w-full" onClick={handleGenerateDescription} disabled={!imageSrc || isGenerating}>
-                    {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <WandSparkles className="mr-2 h-4 w-4" />}
-                    Generate Description
-                </Button>
-                {editDescription && (
-                    <Textarea value={editDescription} readOnly rows={2} className="bg-muted mt-2 text-sm" />
-                )}
-            </div>
-            <Separator />
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="secondary" onClick={resetFilters} disabled={!imageSrc}>
-                <RotateCcw className="mr-2 h-4 w-4" /> Reset
-              </Button>
-              <Button onClick={handleDownload} disabled={!imageSrc}>
-                <Download className="mr-2 h-4 w-4" /> Download
-              </Button>
-            </div>
-        </CardFooter>
       </Card>
     </div>
   );
