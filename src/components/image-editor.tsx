@@ -24,7 +24,7 @@ import {
   Image as ImageIcon,
   Loader2,
   SlidersHorizontal,
-  Invert,
+  FlipHorizontal,
 } from 'lucide-react';
 import type { GenerateEditDescriptionInput } from '@/ai/flows/generate-edit-description';
 
@@ -55,7 +55,7 @@ const AVAILABLE_FILTERS: Filter[] = [
   { id: 'grayscale', name: 'Grayscale', icon: Layers, unit: '%', min: 0, max: 100 },
   { id: 'sepia', name: 'Sepia', icon: Camera, unit: '%', min: 0, max: 100 },
   { id: 'hue-rotate', name: 'Hue', icon: WandSparkles, unit: 'deg', min: 0, max: 360 },
-  { id: 'invert', name: 'Invert', icon: Invert, unit: '%', min: 0, max: 100 },
+  { id: 'invert', name: 'Invert', icon: FlipHorizontal, unit: '%', min: 0, max: 100 },
   { id: 'blur', name: 'Blur', icon: Droplets, unit: 'px', min: 0, max: 20 },
 ];
 
