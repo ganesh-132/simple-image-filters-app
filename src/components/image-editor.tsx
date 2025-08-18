@@ -25,6 +25,7 @@ import {
   Loader2,
   SlidersHorizontal,
   FlipHorizontal,
+  Eye,
 } from 'lucide-react';
 import type { GenerateEditDescriptionInput } from '@/ai/flows/generate-edit-description';
 
@@ -46,6 +47,7 @@ const defaultFilterValues = {
   grayscale: 0,
   invert: 0,
   'hue-rotate': 0,
+  opacity: 100,
 };
 
 const AVAILABLE_FILTERS: Filter[] = [
@@ -57,6 +59,7 @@ const AVAILABLE_FILTERS: Filter[] = [
   { id: 'hue-rotate', name: 'Hue', icon: WandSparkles, unit: 'deg', min: 0, max: 360 },
   { id: 'invert', name: 'Invert', icon: FlipHorizontal, unit: '%', min: 0, max: 100 },
   { id: 'blur', name: 'Blur', icon: Droplets, unit: 'px', min: 0, max: 20 },
+  { id: 'opacity', name: 'Opacity', icon: Eye, unit: '%', min: 0, max: 100 },
 ];
 
 export function ImageEditor() {
@@ -175,8 +178,8 @@ export function ImageEditor() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-4 md:p-8 h-full">
-      <div className="lg:col-span-2 bg-card/50 rounded-lg flex items-center justify-center p-4 border border-dashed aspect-video relative overflow-hidden">
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-8 p-4 md:p-8 h-full">
+      <div className="lg:col-span-3 bg-card/50 rounded-lg flex items-center justify-center p-4 border border-dashed aspect-video relative overflow-hidden">
         {imageSrc ? (
           <canvas ref={canvasRef} className="max-w-full max-h-full object-contain" />
         ) : (
@@ -188,7 +191,7 @@ export function ImageEditor() {
         )}
       </div>
 
-      <Card className="lg:col-span-1 flex flex-col">
+      <Card className="lg:col-span-2 flex flex-col">
         <CardHeader>
           <CardTitle className="flex items-center">
             <SlidersHorizontal className="mr-2 h-6 w-6 text-primary" />
@@ -213,10 +216,10 @@ export function ImageEditor() {
 
           <div className="flex-grow overflow-hidden">
             <ScrollArea className="h-full pr-4 -mr-4">
-              <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
                 {AVAILABLE_FILTERS.map((filter) => (
-                  <div key={filter.id} className="space-y-3">
-                    <Label htmlFor={filter.id} className="flex items-center">
+                  <div key={filter.id} className="space-y-2">
+                    <Label htmlFor={filter.id} className="flex items-center text-sm">
                       <filter.icon className="mr-2 h-4 w-4 text-muted-foreground" />
                       {filter.name}
                       <span className="ml-auto text-xs text-muted-foreground">{appliedFilters[filter.id]}{filter.unit}</span>
@@ -242,7 +245,7 @@ export function ImageEditor() {
                     Generate Description
                 </Button>
                 {editDescription && (
-                    <Textarea value={editDescription} readOnly rows={3} className="bg-muted mt-2" />
+                    <Textarea value={editDescription} readOnly rows={2} className="bg-muted mt-2 text-sm" />
                 )}
             </div>
             <Separator />
