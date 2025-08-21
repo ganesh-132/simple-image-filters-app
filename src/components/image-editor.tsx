@@ -65,7 +65,11 @@ const PRESET_FILTERS = [
     { name: 'Dreamy', values: { brightness: 105, saturate: 130, blur: 2, contrast: 90 } },
     { name: 'Cool Blue', values: { 'hue-rotate': 180, saturate: 110, brightness: 95 } },
     { name: 'Faded', values: { opacity: 80, contrast: 90, saturate: 80 } },
-    { name: 'Sharp', values: { contrast: 150, brightness: 105 } }
+    { name: 'Sharp', values: { contrast: 150, brightness: 105 } },
+    { name: 'Warm', values: { brightness: 105, sepia: 20, saturate: 110 } },
+    { name: 'Cinematic', values: { contrast: 120, saturate: 90 } },
+    { name: 'Vibrant', values: { saturate: 180, contrast: 110 } },
+    { name: 'Muted', values: { contrast: 90, saturate: 90, opacity: 95 } },
 ]
 
 export function ImageEditor() {
