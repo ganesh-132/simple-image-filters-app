@@ -22,7 +22,8 @@ import {
   FlipHorizontal,
   Droplets,
   Undo2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Wind,
 } from 'lucide-react';
 import type { GenerateEditDescriptionInput } from '@/ai/flows/generate-edit-description';
 import { cn } from '@/lib/utils';
