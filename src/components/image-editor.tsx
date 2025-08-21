@@ -24,6 +24,7 @@ import {
   Undo2,
   Image as ImageIcon,
   Wind,
+  CircleDot,
 } from 'lucide-react';
 import type { GenerateEditDescriptionInput } from '@/ai/flows/generate-edit-description';
 import { cn } from '@/lib/utils';
@@ -46,6 +47,7 @@ const defaultFilterValues = {
   blur: 0,
   invert: 0,
   opacity: 100,
+  vignette: 0,
 };
 
 const AVAILABLE_FILTERS: Filter[] = [
@@ -53,6 +55,7 @@ const AVAILABLE_FILTERS: Filter[] = [
   { id: 'contrast', name: 'Contrast', unit: '%', min: 0, max: 200 },
   { id: 'saturate', name: 'Saturation', unit: '%', min: 0, max: 200 },
   { id: 'opacity', name: 'Opacity', unit: '%', min: 0, max: 100 },
+  { id: 'vignette', name: 'Vignette', unit: '%', min: 0, max: 100 },
   { id: 'grayscale', name: 'Grayscale', unit: '%', min: 0, max: 100 },
   { id: 'sepia', name: 'Sepia', unit: '%', min: 0, max: 100 },
   { id: 'hue-rotate', name: 'Hue Rotate', unit: 'deg', min: 0, max: 360 },
@@ -61,16 +64,16 @@ const AVAILABLE_FILTERS: Filter[] = [
 ];
 
 const PRESET_FILTERS = [
-    { name: 'Vintage', values: { brightness: 110, contrast: 110, saturate: 120, sepia: 40 } },
-    { name: 'Black & White', values: { grayscale: 100, contrast: 120 } },
-    { name: 'Dreamy', values: { brightness: 105, saturate: 130, blur: 2, contrast: 90 } },
-    { name: 'Cool Blue', values: { 'hue-rotate': 180, saturate: 110, brightness: 95 } },
-    { name: 'Faded', values: { opacity: 80, contrast: 90, saturate: 80 } },
-    { name: 'Sharp', values: { contrast: 150, brightness: 105 } },
-    { name: 'Warm', values: { brightness: 105, sepia: 20, saturate: 110 } },
-    { name: 'Cinematic', values: { contrast: 120, saturate: 90 } },
-    { name: 'Vibrant', values: { saturate: 180, contrast: 110 } },
-    { name: 'Muted', values: { contrast: 90, saturate: 90, opacity: 95 } },
+  { name: 'Noir', values: { grayscale: 100, contrast: 140, brightness: 90 } },
+  { name: 'Pastel', values: { saturate: 70, contrast: 90, brightness: 110 } },
+  { name: 'Infrared', values: { 'hue-rotate': 280, saturate: 200, contrast: 150 } },
+  { name: 'Polaroid', values: { sepia: 60, contrast: 120, brightness: 110 } },
+  { name: 'Sun-kissed', values: { sepia: 30, saturate: 140, brightness: 105 } },
+  { name: 'Gloom', values: { brightness: 80, saturate: 80, contrast: 110 } },
+  { name: 'Technicolor', values: { 'hue-rotate': 60, saturate: 180, contrast: 120 } },
+  { name: 'Icy', values: { 'hue-rotate': 220, saturate: 30, brightness: 120 } },
+  { name: 'Golden Hour', values: { sepia: 50, saturate: 150, brightness: 110, contrast: 110 } },
+  { name: 'Cyberpunk', values: { 'hue-rotate': 240, saturate: 150, contrast: 130, brightness: 90 } },
 ]
 
 export function ImageEditor() {
@@ -96,14 +99,28 @@ export function ImageEditor() {
     canvas.width = originalImageSize.width;
     canvas.height = originalImageSize.height;
 
-    const filterString = AVAILABLE_FILTERS.map(filter => {
-      const value = appliedFilters[filter.id];
-      const defaultValue = defaultFilterValues[filter.id];
-      return value !== defaultValue ? `${filter.id}(${value}${filter.unit})` : '';
-    }).join(' ').trim();
+    const filterString = AVAILABLE_FILTERS
+      .filter(f => f.id !== 'vignette')
+      .map(filter => {
+        const value = appliedFilters[filter.id];
+        const defaultValue = defaultFilterValues[filter.id];
+        return value !== defaultValue ? `${filter.id}(${value}${filter.unit})` : '';
+      }).join(' ').trim();
 
     ctx.filter = filterString;
     ctx.drawImage(image, 0, 0, originalImageSize.width, originalImageSize.height);
+
+    if (appliedFilters.vignette > 0) {
+        const grd = ctx.createRadialGradient(
+            canvas.width / 2, canvas.height / 2, canvas.width / 4,
+            canvas.width / 2, canvas.height / 2, canvas.width / 2 + (canvas.width/3)
+        );
+        grd.addColorStop(0, `rgba(0,0,0,0)`);
+        grd.addColorStop(1, `rgba(0,0,0,${appliedFilters.vignette / 100})`);
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
   }, [appliedFilters, originalImageSize]);
 
   useEffect(() => {
@@ -259,7 +276,8 @@ export function ImageEditor() {
                         {AVAILABLE_FILTERS.map((filter) => (
                         <div key={filter.id} className="space-y-3">
                             <div className="flex justify-between items-center">
-                                <Label htmlFor={filter.id} className="text-sm font-medium">
+                                <Label htmlFor={filter.id} className="text-sm font-medium flex items-center gap-2">
+                                    {filter.id === 'vignette' && <CircleDot />}
                                     {filter.name}
                                 </Label>
                                 <span className="text-xs font-mono text-muted-foreground">{appliedFilters[filter.id]}{filter.unit}</span>
