@@ -42,9 +42,6 @@ A sleek, responsive web application that allows users to upload an image and app
 ![Screenshot 3]
 <img width="1855" height="927" alt="image" src="https://github.com/user-attachments/assets/b5dda9ca-8159-4de9-a87b-7edd2d851d36" />
 
-
-> *(Add your own screenshots inside a `screenshots/` folder)*
-
 ## 🎯 Goals
 
 - Create a modern and intuitive image editing experience
