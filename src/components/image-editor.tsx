@@ -302,27 +302,34 @@ export function ImageEditor() {
 
             <div className="mt-auto pt-4">
               <h3 className="text-xl font-semibold mb-2">Utilities</h3>
-              <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
                   <Button 
                       onClick={resetFilters} 
                       disabled={!imageSrc}
                       className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6"
                   >
-                      <RotateCcw className="mr-2" /> Reset Filters
+                      <RotateCcw className="mr-2" /> Reset
+                  </Button>
+                  <Button 
+                      onClick={handleUndo}
+                      disabled={history.length === 0}
+                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-lg py-6"
+                  >
+                      <Undo2 className="mr-2" /> Undo
                   </Button>
                   <Button 
                       onClick={clearImage}
                       disabled={!imageSrc}
                       className="w-full bg-red-500 hover:bg-red-600 text-white text-lg py-6"
                   >
-                      <Trash2 className="mr-2" /> Clear Image
+                      <Trash2 className="mr-2" /> Clear
                   </Button>
                   <Button 
                       onClick={handleDownload}
                       disabled={!imageSrc}
                       className="w-full bg-green-500 hover:bg-green-600 text-white text-lg py-6"
                   >
-                      <Save className="mr-2" /> Save Image
+                      <Save className="mr-2" /> Save
                   </Button>
               </div>
             </div>
