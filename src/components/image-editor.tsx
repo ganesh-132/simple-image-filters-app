@@ -248,7 +248,7 @@ export function ImageEditor() {
             <Button 
               onClick={handleUploadClick}
               disabled={isImageLoading}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6 mb-4"
+              className="w-full text-white text-lg py-6 mb-4"
             >
               Change Image
             </Button>
@@ -306,7 +306,7 @@ export function ImageEditor() {
                   <Button 
                       onClick={resetFilters} 
                       disabled={!imageSrc}
-                      className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6"
+                      className="w-full text-white text-lg py-6"
                   >
                       <RotateCcw className="mr-2" /> Reset
                   </Button>
