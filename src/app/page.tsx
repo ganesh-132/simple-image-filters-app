@@ -1,4 +1,5 @@
 import { ImageEditor } from '@/components/image-editor';
+import { Footer } from '@/components/footer';
 
 export default function Home() {
   return (
@@ -6,6 +7,7 @@ export default function Home() {
       <main className="flex-grow">
         <ImageEditor />
       </main>
+      <Footer />
     </div>
   );
 }
