@@ -255,7 +255,7 @@ export function ImageEditor() {
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-xl font-semibold">Filters</h3>
             <Button variant="outline" size="sm" onClick={() => setShowSliders(s => !s)}>
-                Access Sliders Control
+                {showSliders ? 'Go to Presets Filter' : 'Access Sliders Control'}
             </Button>
           </div>
           <hr className="border-dashed border-gray-600 mb-4" />
