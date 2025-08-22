@@ -66,6 +66,7 @@ const AVAILABLE_FILTERS: Filter[] = [
 ];
 
 const PRESET_FILTERS = [
+    { name: 'Original', values: {} },
     { name: 'Noir', values: { grayscale: 100, contrast: 140, brightness: 90 } },
     { name: 'Pastel', values: { saturate: 70, contrast: 90, brightness: 110 } },
     { name: 'Infrared', values: { 'hue-rotate': 280, saturate: 200, contrast: 150 } },
@@ -262,7 +263,7 @@ export function ImageEditor() {
                 </TabsList>
             </div>
             
-            <TabsContent value="presets" className="flex-grow p-4 pt-0">
+            <TabsContent value="presets" className="flex-grow p-4 pt-0 overflow-y-auto">
                 <ScrollArea className="h-full pr-4 -mr-4">
                     <div className="grid grid-cols-2 gap-4">
                         {PRESET_FILTERS.map((preset) => (
@@ -304,7 +305,7 @@ export function ImageEditor() {
                       ))}
                   </div>
                 </ScrollArea>
-                <div className="pt-4 border-t mt-4 grid grid-cols-2 gap-4">
+                <div className="pt-4 border-t mt-auto grid grid-cols-2 gap-4">
                     <Button variant="outline" className="w-full" onClick={handleUndo} disabled={history.length === 0 || !imageSrc}>
                         <Undo2 className="mr-2 h-4 w-4" /> Undo
                     </Button>
