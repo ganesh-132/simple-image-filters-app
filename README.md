@@ -33,8 +33,12 @@ A sleek, responsive web application that allows users to upload an image and app
 
 ## 📸 Screenshots
 
-![Screenshot 1](./screenshots/screenshot1.png)  
-![Screenshot 2](./screenshots/screenshot2.png)
+![Screenshot 1](<img width="1863" height="941" alt="image" src="https://github.com/user-attachments/assets/e4747f72-1eb2-4f0a-8410-e2c024882ebf" />
+)  
+![Screenshot 2](<img width="1848" height="926" alt="image" src="https://github.com/user-attachments/assets/783b1a38-8efc-4940-a70c-5ed229e1012b" />
+)
+![Screenshot 3](<img width="1855" height="927" alt="image" src="https://github.com/user-attachments/assets/9bf6f57c-7884-4eab-b261-2f418139dbb7" />
+)
 
 > *(Add your own screenshots inside a `screenshots/` folder)*
 
