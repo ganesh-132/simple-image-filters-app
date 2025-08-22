@@ -25,6 +25,7 @@ import {
   Image as ImageIcon,
   Wind,
   CircleDot,
+  Save,
 } from 'lucide-react';
 import type { GenerateEditDescriptionInput } from '@/ai/flows/generate-edit-description';
 import { cn } from '@/lib/utils';
@@ -171,6 +172,15 @@ export function ImageEditor() {
     setHistory(prev => prev.slice(0, prev.length - 1));
   }
 
+  const handleDownload = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const link = document.createElement('a');
+    link.download = 'edited-image.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
   const loadSampleImage = useCallback(async () => {
     setIsImageLoading(true);
     try {
@@ -301,6 +311,11 @@ export function ImageEditor() {
                     </Button>
                     <Button variant="outline" className="w-full" onClick={resetFilters} disabled={!imageSrc}>
                         <RotateCcw className="mr-2 h-4 w-4" /> Reset
+                    </Button>
+                </div>
+                <div className="pt-4">
+                    <Button className="w-full" onClick={handleDownload} disabled={!imageSrc}>
+                        <Save className="mr-2 h-4 w-4" /> Save Image
                     </Button>
                 </div>
             </TabsContent>
