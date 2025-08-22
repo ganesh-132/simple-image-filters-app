@@ -304,7 +304,7 @@ export function ImageEditor() {
                       ))}
                   </div>
                 </ScrollArea>
-                <div className="pt-4 mt-auto grid grid-cols-2 gap-4">
+                <div className="pt-4 border-t mt-4 grid grid-cols-2 gap-4">
                     <Button variant="outline" className="w-full" onClick={handleUndo} disabled={history.length === 0 || !imageSrc}>
                         <Undo2 className="mr-2 h-4 w-4" /> Undo
                     </Button>
