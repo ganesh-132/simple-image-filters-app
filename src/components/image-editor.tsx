@@ -289,7 +289,7 @@ export function ImageEditor() {
                     <Button 
                         key={preset.name}
                         variant="outline"
-                        className="h-16 text-md"
+                        className="h-16 text-md border-gray-700 hover:border-accent hover:bg-gray-800 hover:text-accent-foreground transition-colors"
                         onClick={() => applyPreset(preset.values)}
                         disabled={!imageSrc}
                     >
