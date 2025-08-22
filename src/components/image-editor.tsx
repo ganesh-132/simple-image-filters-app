@@ -3,34 +3,22 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { generateEditDescription } from '@/ai/flows/generate-edit-description';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Sun,
-  Contrast,
-  Palette,
-  Camera,
-  WandSparkles,
   Upload,
   RotateCcw,
   Loader2,
   SlidersHorizontal,
-  FlipHorizontal,
-  Droplets,
-  Undo2,
   Image as ImageIcon,
-  Wind,
-  CircleDot,
   Save,
-  FilePlus,
+  Trash2,
+  Undo2,
 } from 'lucide-react';
 import type { GenerateEditDescriptionInput } from '@/ai/flows/generate-edit-description';
-import { cn } from '@/lib/utils';
-import { ThemeToggle } from './theme-toggle';
 
 type Filter = {
   id: keyof typeof defaultFilterValues;
@@ -63,21 +51,16 @@ const AVAILABLE_FILTERS: Filter[] = [
   { id: 'hue-rotate', name: 'Hue Rotate', unit: 'deg', min: 0, max: 360 },
   { id: 'blur', name: 'Blur', unit: 'px', min: 0, max: 20 },
   { id: 'invert', name: 'Invert', unit: '%', min: 0, max: 100 },
-  { id: 'vignette', name: 'Vignette', unit: '%', min: 0, max: 100 },
 ];
 
 const PRESET_FILTERS = [
-    { name: 'Original', values: {} },
-    { name: 'Noir', values: { grayscale: 100, contrast: 140, brightness: 90 } },
-    { name: 'Pastel', values: { saturate: 70, contrast: 90, brightness: 110 } },
-    { name: 'Infrared', values: { 'hue-rotate': 280, saturate: 200, contrast: 150 } },
-    { name: 'Polaroid', values: { sepia: 60, contrast: 120, brightness: 110 } },
-    { name: 'Sun-kissed', values: { sepia: 30, saturate: 140, brightness: 105 } },
-    { name: 'Gloom', values: { brightness: 80, saturate: 80, contrast: 110 } },
-    { name: 'Technicolor', values: { 'hue-rotate': 60, saturate: 180, contrast: 120 } },
-    { name: 'Icy', values: { 'hue-rotate': 220, saturate: 30, brightness: 120 } },
-    { name: 'Golden Hour', values: { sepia: 50, saturate: 150, brightness: 110, contrast: 110 } },
-    { name: 'Cyberpunk', values: { 'hue-rotate': 240, saturate: 150, contrast: 130, brightness: 90 } },
+    { name: 'Vintage', values: { sepia: 60, brightness: 110, contrast: 110, saturate: 110 } },
+    { name: 'Cool', values: { 'hue-rotate': 220, saturate: 30, brightness: 120 } },
+    { name: 'Warm', values: { sepia: 40, saturate: 120, brightness: 105 } },
+    { name: 'Grayscale+', values: { grayscale: 100, contrast: 120, brightness: 95 } },
+    { name: 'Dramatic', values: { contrast: 150, brightness: 80, saturate: 130 } },
+    { name: 'Summer', values: { saturate: 140, brightness: 110, 'hue-rotate': 350 } },
+    { name: 'Faded', values: { opacity: 75, contrast: 90, brightness: 110 } },
 ]
 
 export function ImageEditor() {
@@ -87,6 +70,7 @@ export function ImageEditor() {
   const [history, setHistory] = useState<Record<string, number>[]>([]);
   const [originalImageSize, setOriginalImageSize] = useState({ width: 0, height: 0 });
   const [isImageLoading, setIsImageLoading] = useState(false);
+  const [showSliders, setShowSliders] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
@@ -104,7 +88,6 @@ export function ImageEditor() {
     canvas.height = originalImageSize.height;
 
     const filterString = AVAILABLE_FILTERS
-      .filter(f => f.id !== 'vignette')
       .map(filter => {
         const value = appliedFilters[filter.id];
         const defaultValue = defaultFilterValues[filter.id];
@@ -113,17 +96,6 @@ export function ImageEditor() {
 
     ctx.filter = filterString;
     ctx.drawImage(image, 0, 0, originalImageSize.width, originalImageSize.height);
-
-    if (appliedFilters.vignette > 0) {
-        const grd = ctx.createRadialGradient(
-            canvas.width / 2, canvas.height / 2, canvas.width / 4,
-            canvas.width / 2, canvas.height / 2, canvas.width / 2 + (canvas.width/3)
-        );
-        grd.addColorStop(0, `rgba(0,0,0,0)`);
-        grd.addColorStop(1, `rgba(0,0,0,${appliedFilters.vignette / 100})`);
-        ctx.fillStyle = grd;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
 
   }, [appliedFilters, originalImageSize]);
 
@@ -145,6 +117,7 @@ export function ImageEditor() {
           setOriginalImageSize({width: newImage.naturalWidth, height: newImage.naturalHeight});
           setImageSrc(e.target?.result as string);
           resetFilters();
+          setShowSliders(false);
           setIsImageLoading(false);
         };
         newImage.src = e.target?.result as string;
@@ -152,6 +125,10 @@ export function ImageEditor() {
       reader.readAsDataURL(file);
     }
   };
+  
+  const handleUploadClick = () => {
+    uploadInputRef.current?.click();
+  }
 
   const handleFilterChange = (filterId: string, value: number) => {
     setHistory(prev => [...prev, appliedFilters]);
@@ -184,10 +161,11 @@ export function ImageEditor() {
     link.click();
   };
   
-  const handleNewEdit = () => {
+  const clearImage = () => {
     setImageSrc(null);
     setHistory([]);
     imageRef.current = null;
+    setShowSliders(false);
   }
 
   const loadSampleImage = useCallback(async () => {
@@ -204,6 +182,7 @@ export function ImageEditor() {
             setOriginalImageSize({width: newImage.naturalWidth, height: newImage.naturalHeight});
             setImageSrc(e.target?.result as string);
             resetFilters();
+            setShowSliders(false);
           };
           newImage.src = e.target?.result as string;
         };
@@ -222,6 +201,13 @@ export function ImageEditor() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] h-full bg-black">
+      <input
+        type="file"
+        ref={uploadInputRef}
+        onChange={handleImageUpload}
+        className="hidden"
+        accept="image/*"
+      />
       <div className="flex items-center justify-center p-4 md:p-8 bg-black">
         {imageSrc ? (
           <div className="relative rounded-lg overflow-hidden shadow-2xl bg-white">
@@ -241,14 +227,7 @@ export function ImageEditor() {
                 <p className="mt-2 text-sm text-muted-foreground">
                   Click the button below to upload an image from your device.
                 </p>
-                <input
-                  type="file"
-                  ref={uploadInputRef}
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  accept="image/*"
-                />
-                <Button className="mt-6" onClick={() => uploadInputRef.current?.click()}>
+                <Button className="mt-6" onClick={handleUploadClick}>
                   <Upload className="mr-2" />
                   Upload Image
                 </Button>
@@ -261,74 +240,90 @@ export function ImageEditor() {
       </div>
 
       <Card className="lg:col-start-2 flex flex-col bg-card border-l rounded-none">
-        <CardContent className="flex-grow overflow-hidden flex flex-col p-0">
-          <Tabs defaultValue="custom" className="flex flex-col h-full">
-            <div className="p-4">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="presets"><WandSparkles className="mr-2" /> Presets</TabsTrigger>
-                    <TabsTrigger value="custom"><SlidersHorizontal className="mr-2" /> Custom</TabsTrigger>
-                </TabsList>
-            </div>
-            
-            <TabsContent value="presets" className="flex-grow p-4 pt-0 overflow-y-auto">
-                <ScrollArea className="h-full pr-4 -mr-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        {PRESET_FILTERS.map((preset) => (
-                            <Button 
-                                key={preset.name}
-                                variant="outline"
-                                className="h-20 text-lg"
-                                onClick={() => applyPreset(preset.values)}
-                                disabled={!imageSrc}
-                            >
-                                {preset.name}
-                            </Button>
-                        ))}
-                    </div>
-                </ScrollArea>
-            </TabsContent>
+        <CardHeader>
+            <CardTitle className="text-2xl text-center">Controls</CardTitle>
+        </CardHeader>
+        <CardContent className="flex-grow overflow-hidden flex flex-col p-4 pt-0">
+          <Button 
+            onClick={handleUploadClick}
+            disabled={isImageLoading}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6 mb-4"
+          >
+            Change Image
+          </Button>
 
-            <TabsContent value="custom" className="flex-grow overflow-hidden flex flex-col p-4 pt-0 mt-0">
-                <ScrollArea className="flex-grow pr-4 -mr-4">
-                  <div className="space-y-4">
-                      {AVAILABLE_FILTERS.map((filter) => (
-                      <div key={filter.id} className="space-y-3">
-                          <div className="flex justify-between items-center">
-                              <Label htmlFor={filter.id} className="text-sm font-medium flex items-center gap-2">
-                                  {filter.id === 'vignette' && <CircleDot />}
-                                  {filter.name}
-                              </Label>
-                              <span className="text-xs font-mono text-muted-foreground">{appliedFilters[filter.id]}{filter.unit}</span>
-                          </div>
-                          <Slider
-                            id={filter.id}
-                            min={filter.min}
-                            max={filter.max}
-                            value={[appliedFilters[filter.id]]}
-                            onValueChange={([val]) => handleFilterChange(filter.id, val)}
-                            disabled={!imageSrc}
-                          />
-                      </div>
-                      ))}
-                  </div>
-                </ScrollArea>
-                <div className="pt-4 border-t mt-auto grid grid-cols-2 gap-4">
-                    <Button variant="outline" className="w-full" onClick={handleUndo} disabled={history.length === 0 || !imageSrc}>
-                        <Undo2 className="mr-2 h-4 w-4" /> Undo
-                    </Button>
-                    <Button variant="outline" className="w-full" onClick={resetFilters} disabled={!imageSrc}>
-                        <RotateCcw className="mr-2 h-4 w-4" /> Reset
-                    </Button>
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-xl font-semibold">Filters</h3>
+            <Button variant="outline" size="sm" onClick={() => setShowSliders(s => !s)}>
+                Access Sliders Control
+            </Button>
+          </div>
+          <hr className="border-dashed border-gray-600 mb-4" />
+
+          {showSliders ? (
+            <ScrollArea className="flex-grow pr-4 -mr-4">
+                <div className="space-y-4">
+                    {AVAILABLE_FILTERS.map((filter) => (
+                    <div key={filter.id} className="space-y-3">
+                        <div className="flex justify-between items-center">
+                            <Label htmlFor={filter.id} className="text-sm font-medium flex items-center gap-2">
+                                {filter.name}
+                            </Label>
+                            <span className="text-xs font-mono text-muted-foreground">{appliedFilters[filter.id]}{filter.unit}</span>
+                        </div>
+                        <Slider
+                        id={filter.id}
+                        min={filter.min}
+                        max={filter.max}
+                        value={[appliedFilters[filter.id]]}
+                        onValueChange={([val]) => handleFilterChange(filter.id, val)}
+                        disabled={!imageSrc}
+                        />
+                    </div>
+                    ))}
                 </div>
-            </TabsContent>
-          </Tabs>
-           <div className="p-4 border-t grid grid-cols-2 gap-4">
-              <Button variant="outline" className="w-full" onClick={handleNewEdit} disabled={!imageSrc}>
-                  <FilePlus className="mr-2 h-4 w-4" /> New Edit
-              </Button>
-              <Button className="w-full" onClick={handleDownload} disabled={!imageSrc}>
-                  <Save className="mr-2 h-4 w-4" /> Save Image
-              </Button>
+            </ScrollArea>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 mb-4">
+                {PRESET_FILTERS.map((preset) => (
+                    <Button 
+                        key={preset.name}
+                        variant="outline"
+                        className="h-16 text-md"
+                        onClick={() => applyPreset(preset.values)}
+                        disabled={!imageSrc}
+                    >
+                        {preset.name}
+                    </Button>
+                ))}
+            </div>
+          )}
+
+          <div className="mt-auto pt-4">
+            <h3 className="text-xl font-semibold mb-2">Utilities</h3>
+            <div className="space-y-2">
+                <Button 
+                    onClick={resetFilters} 
+                    disabled={!imageSrc}
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6"
+                >
+                    <RotateCcw className="mr-2" /> Reset Filters
+                </Button>
+                <Button 
+                    onClick={clearImage}
+                    disabled={!imageSrc}
+                    className="w-full bg-red-500 hover:bg-red-600 text-white text-lg py-6"
+                >
+                    <Trash2 className="mr-2" /> Clear Image
+                </Button>
+                <Button 
+                    onClick={handleDownload}
+                    disabled={!imageSrc}
+                    className="w-full bg-green-500 hover:bg-green-600 text-white text-lg py-6"
+                >
+                    <Save className="mr-2" /> Save Image
+                </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
