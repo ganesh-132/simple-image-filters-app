@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export function Footer() {
   return (
-    <footer className="bg-black text-white py-6">
+    <footer className="bg-black text-white py-6 sticky bottom-0 z-50">
       <div className="container mx-auto px-4 text-center">
         <div className="flex items-center justify-center space-x-2 mb-4">
           <p className="text-lg">Created with</p>
