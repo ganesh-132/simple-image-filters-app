@@ -200,7 +200,7 @@ export function ImageEditor() {
   }, [toast]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] h-full bg-black">
+    <div className={`grid h-full bg-black ${imageSrc ? 'grid-cols-1 lg:grid-cols-[1fr_400px]' : 'grid-cols-1'}`}>
       <input
         type="file"
         ref={uploadInputRef}
@@ -239,94 +239,96 @@ export function ImageEditor() {
         )}
       </div>
 
-      <Card className="lg:col-start-2 flex flex-col bg-card border-l rounded-none">
-        <CardHeader>
-            <CardTitle className="text-2xl text-center">Controls</CardTitle>
-        </CardHeader>
-        <CardContent className="flex-grow overflow-hidden flex flex-col p-4 pt-0">
-          <Button 
-            onClick={handleUploadClick}
-            disabled={isImageLoading}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6 mb-4"
-          >
-            Change Image
-          </Button>
-
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-xl font-semibold">Filters</h3>
-            <Button variant="outline" size="sm" onClick={() => setShowSliders(s => !s)}>
-                {showSliders ? 'Go to Presets Filter' : 'Access Sliders Control'}
+      {imageSrc && (
+        <Card className="lg:col-start-2 flex flex-col bg-card border-l rounded-none">
+          <CardHeader>
+              <CardTitle className="text-2xl text-center">Controls</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-grow overflow-hidden flex flex-col p-4 pt-0">
+            <Button 
+              onClick={handleUploadClick}
+              disabled={isImageLoading}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6 mb-4"
+            >
+              Change Image
             </Button>
-          </div>
-          <hr className="border-dashed border-gray-600 mb-4" />
 
-          {showSliders ? (
-            <ScrollArea className="flex-grow pr-4 -mr-4">
-                <div className="space-y-4">
-                    {AVAILABLE_FILTERS.map((filter) => (
-                    <div key={filter.id} className="space-y-3">
-                        <div className="flex justify-between items-center">
-                            <Label htmlFor={filter.id} className="text-sm font-medium flex items-center gap-2">
-                                {filter.name}
-                            </Label>
-                            <span className="text-xs font-mono text-muted-foreground">{appliedFilters[filter.id]}{filter.unit}</span>
-                        </div>
-                        <Slider
-                        id={filter.id}
-                        min={filter.min}
-                        max={filter.max}
-                        value={[appliedFilters[filter.id]]}
-                        onValueChange={([val]) => handleFilterChange(filter.id, val)}
-                        disabled={!imageSrc}
-                        />
-                    </div>
-                    ))}
-                </div>
-            </ScrollArea>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 mb-4">
-                {PRESET_FILTERS.map((preset) => (
-                    <Button 
-                        key={preset.name}
-                        variant="outline"
-                        className="h-16 text-md border-gray-700 hover:border-accent hover:bg-gray-800 hover:text-accent-foreground transition-colors"
-                        onClick={() => applyPreset(preset.values)}
-                        disabled={!imageSrc}
-                    >
-                        {preset.name}
-                    </Button>
-                ))}
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-xl font-semibold">Filters</h3>
+              <Button variant="outline" size="sm" onClick={() => setShowSliders(s => !s)}>
+                  {showSliders ? 'Go to Presets Filter' : 'Access Sliders Control'}
+              </Button>
             </div>
-          )}
+            <hr className="border-dashed border-gray-600 mb-4" />
 
-          <div className="mt-auto pt-4">
-            <h3 className="text-xl font-semibold mb-2">Utilities</h3>
-            <div className="space-y-2">
-                <Button 
-                    onClick={resetFilters} 
-                    disabled={!imageSrc}
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6"
-                >
-                    <RotateCcw className="mr-2" /> Reset Filters
-                </Button>
-                <Button 
-                    onClick={clearImage}
-                    disabled={!imageSrc}
-                    className="w-full bg-red-500 hover:bg-red-600 text-white text-lg py-6"
-                >
-                    <Trash2 className="mr-2" /> Clear Image
-                </Button>
-                <Button 
-                    onClick={handleDownload}
-                    disabled={!imageSrc}
-                    className="w-full bg-green-500 hover:bg-green-600 text-white text-lg py-6"
-                >
-                    <Save className="mr-2" /> Save Image
-                </Button>
+            {showSliders ? (
+              <ScrollArea className="flex-grow pr-4 -mr-4">
+                  <div className="space-y-4">
+                      {AVAILABLE_FILTERS.map((filter) => (
+                      <div key={filter.id} className="space-y-3">
+                          <div className="flex justify-between items-center">
+                              <Label htmlFor={filter.id} className="text-sm font-medium flex items-center gap-2">
+                                  {filter.name}
+                              </Label>
+                              <span className="text-xs font-mono text-muted-foreground">{appliedFilters[filter.id]}{filter.unit}</span>
+                          </div>
+                          <Slider
+                          id={filter.id}
+                          min={filter.min}
+                          max={filter.max}
+                          value={[appliedFilters[filter.id]]}
+                          onValueChange={([val]) => handleFilterChange(filter.id, val)}
+                          disabled={!imageSrc}
+                          />
+                      </div>
+                      ))}
+                  </div>
+              </ScrollArea>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                  {PRESET_FILTERS.map((preset) => (
+                      <Button 
+                          key={preset.name}
+                          variant="outline"
+                          className="h-16 text-md border-gray-700 hover:border-accent hover:bg-gray-800 hover:text-accent-foreground transition-colors"
+                          onClick={() => applyPreset(preset.values)}
+                          disabled={!imageSrc}
+                      >
+                          {preset.name}
+                      </Button>
+                  ))}
+              </div>
+            )}
+
+            <div className="mt-auto pt-4">
+              <h3 className="text-xl font-semibold mb-2">Utilities</h3>
+              <div className="space-y-2">
+                  <Button 
+                      onClick={resetFilters} 
+                      disabled={!imageSrc}
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6"
+                  >
+                      <RotateCcw className="mr-2" /> Reset Filters
+                  </Button>
+                  <Button 
+                      onClick={clearImage}
+                      disabled={!imageSrc}
+                      className="w-full bg-red-500 hover:bg-red-600 text-white text-lg py-6"
+                  >
+                      <Trash2 className="mr-2" /> Clear Image
+                  </Button>
+                  <Button 
+                      onClick={handleDownload}
+                      disabled={!imageSrc}
+                      className="w-full bg-green-500 hover:bg-green-600 text-white text-lg py-6"
+                  >
+                      <Save className="mr-2" /> Save Image
+                  </Button>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
