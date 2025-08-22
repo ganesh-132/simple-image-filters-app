@@ -281,31 +281,29 @@ export function ImageEditor() {
             </TabsContent>
 
             <TabsContent value="custom" className="flex-grow overflow-hidden flex flex-col p-4 pt-0 mt-0">
-                <div className="flex-grow overflow-hidden">
-                    <ScrollArea className="h-full pr-4 -mr-4">
-                    <div className="space-y-6">
-                        {AVAILABLE_FILTERS.map((filter) => (
-                        <div key={filter.id} className="space-y-3">
-                            <div className="flex justify-between items-center">
-                                <Label htmlFor={filter.id} className="text-sm font-medium flex items-center gap-2">
-                                    {filter.id === 'vignette' && <CircleDot />}
-                                    {filter.name}
-                                </Label>
-                                <span className="text-xs font-mono text-muted-foreground">{appliedFilters[filter.id]}{filter.unit}</span>
-                            </div>
-                            <Slider
-                              id={filter.id}
-                              min={filter.min}
-                              max={filter.max}
-                              value={[appliedFilters[filter.id]]}
-                              onValueChange={([val]) => handleFilterChange(filter.id, val)}
-                              disabled={!imageSrc}
-                            />
-                        </div>
-                        ))}
-                    </div>
-                    </ScrollArea>
-                </div>
+                <ScrollArea className="flex-grow pr-4 -mr-4">
+                  <div className="space-y-4">
+                      {AVAILABLE_FILTERS.map((filter) => (
+                      <div key={filter.id} className="space-y-3">
+                          <div className="flex justify-between items-center">
+                              <Label htmlFor={filter.id} className="text-sm font-medium flex items-center gap-2">
+                                  {filter.id === 'vignette' && <CircleDot />}
+                                  {filter.name}
+                              </Label>
+                              <span className="text-xs font-mono text-muted-foreground">{appliedFilters[filter.id]}{filter.unit}</span>
+                          </div>
+                          <Slider
+                            id={filter.id}
+                            min={filter.min}
+                            max={filter.max}
+                            value={[appliedFilters[filter.id]]}
+                            onValueChange={([val]) => handleFilterChange(filter.id, val)}
+                            disabled={!imageSrc}
+                          />
+                      </div>
+                      ))}
+                  </div>
+                </ScrollArea>
                 <div className="pt-4 mt-auto grid grid-cols-2 gap-4">
                     <Button variant="outline" className="w-full" onClick={handleUndo} disabled={history.length === 0 || !imageSrc}>
                         <Undo2 className="mr-2 h-4 w-4" /> Undo
