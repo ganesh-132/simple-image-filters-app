@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import type { GenerateEditDescriptionInput } from '@/ai/flows/generate-edit-description';
 import { cn } from '@/lib/utils';
+import { ThemeToggle } from './theme-toggle';
 
 type Filter = {
   id: keyof typeof defaultFilterValues;
@@ -56,25 +57,25 @@ const AVAILABLE_FILTERS: Filter[] = [
   { id: 'contrast', name: 'Contrast', unit: '%', min: 0, max: 200 },
   { id: 'saturate', name: 'Saturation', unit: '%', min: 0, max: 200 },
   { id: 'opacity', name: 'Opacity', unit: '%', min: 0, max: 100 },
-  { id: 'vignette', name: 'Vignette', unit: '%', min: 0, max: 100 },
   { id: 'grayscale', name: 'Grayscale', unit: '%', min: 0, max: 100 },
   { id: 'sepia', name: 'Sepia', unit: '%', min: 0, max: 100 },
   { id: 'hue-rotate', name: 'Hue Rotate', unit: 'deg', min: 0, max: 360 },
   { id: 'blur', name: 'Blur', unit: 'px', min: 0, max: 20 },
   { id: 'invert', name: 'Invert', unit: '%', min: 0, max: 100 },
+  { id: 'vignette', name: 'Vignette', unit: '%', min: 0, max: 100 },
 ];
 
 const PRESET_FILTERS = [
-  { name: 'Noir', values: { grayscale: 100, contrast: 140, brightness: 90 } },
-  { name: 'Pastel', values: { saturate: 70, contrast: 90, brightness: 110 } },
-  { name: 'Infrared', values: { 'hue-rotate': 280, saturate: 200, contrast: 150 } },
-  { name: 'Polaroid', values: { sepia: 60, contrast: 120, brightness: 110 } },
-  { name: 'Sun-kissed', values: { sepia: 30, saturate: 140, brightness: 105 } },
-  { name: 'Gloom', values: { brightness: 80, saturate: 80, contrast: 110 } },
-  { name: 'Technicolor', values: { 'hue-rotate': 60, saturate: 180, contrast: 120 } },
-  { name: 'Icy', values: { 'hue-rotate': 220, saturate: 30, brightness: 120 } },
-  { name: 'Golden Hour', values: { sepia: 50, saturate: 150, brightness: 110, contrast: 110 } },
-  { name: 'Cyberpunk', values: { 'hue-rotate': 240, saturate: 150, contrast: 130, brightness: 90 } },
+    { name: 'Noir', values: { grayscale: 100, contrast: 140, brightness: 90 } },
+    { name: 'Pastel', values: { saturate: 70, contrast: 90, brightness: 110 } },
+    { name: 'Infrared', values: { 'hue-rotate': 280, saturate: 200, contrast: 150 } },
+    { name: 'Polaroid', values: { sepia: 60, contrast: 120, brightness: 110 } },
+    { name: 'Sun-kissed', values: { sepia: 30, saturate: 140, brightness: 105 } },
+    { name: 'Gloom', values: { brightness: 80, saturate: 80, contrast: 110 } },
+    { name: 'Technicolor', values: { 'hue-rotate': 60, saturate: 180, contrast: 120 } },
+    { name: 'Icy', values: { 'hue-rotate': 220, saturate: 30, brightness: 120 } },
+    { name: 'Golden Hour', values: { sepia: 50, saturate: 150, brightness: 110, contrast: 110 } },
+    { name: 'Cyberpunk', values: { 'hue-rotate': 240, saturate: 150, contrast: 130, brightness: 90 } },
 ]
 
 export function ImageEditor() {
@@ -212,7 +213,7 @@ export function ImageEditor() {
   }, [toast]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] h-screen bg-black">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] h-full bg-black">
       <div className="flex items-center justify-center p-4 md:p-8 bg-black">
         {imageSrc ? (
           <div className="relative rounded-lg overflow-hidden shadow-2xl bg-white">
