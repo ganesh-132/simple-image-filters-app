@@ -26,6 +26,7 @@ import {
   Wind,
   CircleDot,
   Save,
+  FilePlus,
 } from 'lucide-react';
 import type { GenerateEditDescriptionInput } from '@/ai/flows/generate-edit-description';
 import { cn } from '@/lib/utils';
@@ -182,6 +183,12 @@ export function ImageEditor() {
     link.href = canvas.toDataURL('image/png');
     link.click();
   };
+  
+  const handleNewEdit = () => {
+    setImageSrc(null);
+    setHistory([]);
+    imageRef.current = null;
+  }
 
   const loadSampleImage = useCallback(async () => {
     setIsImageLoading(true);
@@ -313,13 +320,16 @@ export function ImageEditor() {
                         <RotateCcw className="mr-2 h-4 w-4" /> Reset
                     </Button>
                 </div>
-                <div className="pt-4">
-                    <Button className="w-full" onClick={handleDownload} disabled={!imageSrc}>
-                        <Save className="mr-2 h-4 w-4" /> Save Image
-                    </Button>
-                </div>
             </TabsContent>
           </Tabs>
+           <div className="p-4 border-t grid grid-cols-2 gap-4">
+              <Button variant="outline" className="w-full" onClick={handleNewEdit} disabled={!imageSrc}>
+                  <FilePlus className="mr-2 h-4 w-4" /> New Edit
+              </Button>
+              <Button className="w-full" onClick={handleDownload} disabled={!imageSrc}>
+                  <Save className="mr-2 h-4 w-4" /> Save Image
+              </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
